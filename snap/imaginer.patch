@@ -1,0 +1,23 @@
+diff -Naur a/data/page.codeberg.Imaginer.Imaginer.appdata.xml.in b/data/page.codeberg.Imaginer.Imaginer.appdata.xml.in
+--- a/data/page.codeberg.Imaginer.Imaginer.appdata.xml.in	2023-06-15 16:42:17.870673692 +0530
++++ b/data/page.codeberg.Imaginer.Imaginer.appdata.xml.in	2023-06-15 16:43:18.987146766 +0530
+@@ -1,6 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <component type="desktop">
+ 	<id>page.codeberg.Imaginer.Imaginer.desktop</id>
++	<icon type="stock">snap.imaginer.page.codeberg.Imaginer.Imaginer</icon>
+ 	<name>Imaginer</name>
+ 	<summary>Imagine with AI</summary>
+ 	<developer_name>0xMRTT</developer_name>
+diff -Naur a/data/page.codeberg.Imaginer.Imaginer.desktop.in b/data/page.codeberg.Imaginer.Imaginer.desktop.in
+--- a/data/page.codeberg.Imaginer.Imaginer.desktop.in	2023-06-15 16:42:38.078832168 +0530
++++ b/data/page.codeberg.Imaginer.Imaginer.desktop.in	2023-06-15 16:44:08.483517073 +0530
+@@ -1,7 +1,7 @@
+ [Desktop Entry]
+ Name=Imaginer
+ Exec=imaginer
+-Icon=page.codeberg.Imaginer.Imaginer
++Icon=snap.imaginer.page.codeberg.Imaginer.Imaginer
+ Terminal=false
+ Type=Application
+ Categories=GTK;

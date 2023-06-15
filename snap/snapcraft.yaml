@@ -1,0 +1,108 @@
+name: imaginer # you probably want to 'snapcraft register <name>'
+base: core22 # the base snap is the execution environment for this snap
+adopt-info: imaginer
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+
+layout:
+  /usr/lib/x86_64-linux-gnu/webkitgtk-6.0:
+    bind: $SNAP/webkitgtk-platform/usr/lib/x86_64-linux-gnu/webkitgtk-6.0
+
+parts:
+  blueprint-compiler:
+    source: https://gitlab.gnome.org/jwestman/blueprint-compiler.git
+    source-tag: 'v0.8.0'
+    plugin: meson
+    meson-parameters:
+      - --prefix=/usr
+    override-prime: ''
+  openai:
+    plugin: python
+    source: https://github.com/openai/openai-python.git
+    source-tag: '0.27.5'
+    build-environment:
+      # WORKAROUND: The python plugin is broken with gnome extension
+      - PATH: ${CRAFT_PART_INSTALL}/bin:${PATH}
+      - PYTHONPATH: ""
+    python-packages:
+      - Pillow==9.5.0
+      - requests==2.29.0
+    prime:
+      # WORKAROUND: Skip venv from python plugin
+      - -usr/bin/activate
+      - -usr/bin/activate.csh
+      - -usr/bin/activate.fish
+      - -usr/bin/Activate.ps1
+      - -usr/bin/python
+      - -usr/bin/python3
+      - -usr/bin/python3.10
+      - -usr/bin/pip
+      - -usr/bin/pip3
+      - -usr/bin/pip3.10
+      - -usr/bin/wheel
+      - -usr/lib/python3.10/dist-packages/pip*
+      - -usr/lib/python3.10/dist-packages/setuptools*
+      - -pyvenv.cfg
+      - -lib
+      - -lib64
+      - -include
+      - -share 
+    organize:
+      bin: usr/bin
+      lib/python3.10/site-packages: usr/lib/python3.10/dist-packages
+  imaginer:
+    after: [ openai, blueprint-compiler ]
+    # See 'snapcraft plugins'
+    plugin: meson
+    build-environment:
+      - PYTHONPATH: $CRAFT_STAGE/usr/lib/python3/dist-packages:$CRAFT_STAGE/usr/lib/python3.10/dist-packages:$PYTHONPATH
+      - LD_LIBRARY_PATH: /snap/webkitgtk-sdk/current/usr/lib:/snap/webkitgtk-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET:/snap/webkitgtk-sdk/current/usr/lib/webkitgtk-6.0:/snap/webkitgtk-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0:$LD_LIBRARY_PATH
+      - GI_TYPELIB_PATH: /snap/gnome-42-2204-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0:/snap/gnome-42-2204-sdk/current/usr/lib/girepository-1.0:/snap/webkitgtk-6-gnome-2204-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0
+    source: https://github.com/ImaginerApp/Imaginer.git
+    source-tag: 'v0.2.2'
+    meson-parameters:
+      - --prefix=/snap/imaginer/current/usr
+    build-snaps:
+      - webkitgtk-6-gnome-2204-sdk/latest/stable
+    override-pull: |
+      craftctl default
+      patch -p1 < $CRAFT_PROJECT_DIR/snap/imaginer.patch
+    override-build: |
+      craftctl default
+      mkdir -p $CRAFT_PART_INSTALL/meta/gui
+      cp -r $CRAFT_PART_INSTALL/snap/imaginer/current/usr/share/icons $CRAFT_PART_INSTALL/meta/gui/
+      for i in `find $CRAFT_PART_INSTALL/meta/gui/icons -name "*.svg" -o -name "*.png"`; do
+        mv $i "`dirname $i`/snap.$CRAFT_PROJECT_NAME.`basename $i`"
+      done
+    organize:
+      snap/imaginer/current: .
+    parse-info: [ usr/share/appdata/page.codeberg.Imaginer.Imaginer.appdata.xml ]
+    prime:
+      - -snap/imaginer
+    
+plugs:
+  webkitgtk-6-gnome-2204:
+    interface: content
+    target: $SNAP/webkitgtk-platform
+    default-provider: webkitgtk-6-gnome-2204
+    
+slots:
+  imaginer:
+    interface: dbus
+    bus: session
+    name: page.codeberg.Imaginer.Imaginer
+apps:
+  imaginer:
+    command: usr/bin/imaginer
+    extensions: [ gnome ]
+    common-id: page.codeberg.Imaginer.Imaginer
+    environment:
+      PYTHONPATH: $SNAP/usr/lib/python3.10/dist-packages:$PYTHONPATH
+      GI_TYPELIB_PATH: $SNAP/webkitgtk-platform/usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0:$GI_TYPELIB_PATH   
+      LD_LIBRARY_PATH: $SNAP/webkitgtk-platform/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/webkitgtk-platform/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/webkitgtk-6.0:$LD_LIBRARY_PATH
+    plugs:
+      - network
+      - network-status
+      - network-bind
+      - unity7
