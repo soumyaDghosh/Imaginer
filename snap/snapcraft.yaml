@@ -6,8 +6,8 @@ confinement: strict # use 'strict' once you have the right plugs and slots
 
 
 layout:
-  /usr/lib/x86_64-linux-gnu/webkitgtk-6.0:
-    bind: $SNAP/webkitgtk-platform/usr/lib/x86_64-linux-gnu/webkitgtk-6.0
+  /usr/lib/$CRAFT_ARCH_TRIPLET/webkitgtk-6.0:
+    bind: $SNAP/webkitgtk-platform/usr/lib/$CRAFT_ARCH_TRIPLET/webkitgtk-6.0
 
 parts:
   blueprint-compiler:
@@ -20,7 +20,7 @@ parts:
   openai:
     plugin: python
     source: https://github.com/openai/openai-python.git
-    source-tag: 'v0.27.5'
+    source-tag: '0.27.5'
     build-environment:
       # WORKAROUND: The python plugin is broken with gnome extension
       - PATH: ${CRAFT_PART_INSTALL}/bin:${PATH}
@@ -28,7 +28,6 @@ parts:
     python-packages:
       - Pillow==9.5.0
       - requests==2.29.0
-      - lxml
     prime:
       # WORKAROUND: Skip venv from python plugin
       - -usr/bin/activate
@@ -71,8 +70,6 @@ parts:
       patch -p1 < $CRAFT_PROJECT_DIR/snap/imaginer.patch
     override-build: |
       craftctl default
-      chmod +x $CRAFT_PART_INSTALL/snap/imaginer/current/usr/bin/imaginer
-      sed -e '1c#!/usr/bin/env python3' -i $CRAFT_PART_INSTALL/snap/imaginer/current/usr/bin/imaginer
       mkdir -p $CRAFT_PART_INSTALL/meta/gui
       cp -r $CRAFT_PART_INSTALL/snap/imaginer/current/usr/share/icons $CRAFT_PART_INSTALL/meta/gui/
       for i in `find $CRAFT_PART_INSTALL/meta/gui/icons -name "*.svg" -o -name "*.png"`; do
@@ -83,6 +80,17 @@ parts:
     parse-info: [ usr/share/appdata/page.codeberg.Imaginer.Imaginer.appdata.xml ]
     prime:
       - -snap/imaginer
+  gst:
+    plugin: nil
+    after: [ imaginer ]
+    stage-packages:
+      - gir1.2-gstreamer-1.0
+    prime:
+      - usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0/Gst-1.0.typelib
+      - usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0/GstBase-1.0.typelib
+      - usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0/GstCheck-1.0.typelib
+      - usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0/GstController-1.0.typelib
+      - usr/lib/$CRAFT_ARCH_TRIPLET/girepository-1.0/GstNet-1.0.typelib    
     
 plugs:
   webkitgtk-6-gnome-2204:
