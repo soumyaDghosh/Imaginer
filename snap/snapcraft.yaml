@@ -22,7 +22,7 @@ parts:
   openai:
     plugin: python
     source: https://github.com/openai/openai-python.git
-    source-tag: '0.27.5'
+    source-tag: 'v0.27.5'
     build-environment:
       # WORKAROUND: The python plugin is broken with gnome extension
       - PATH: ${CRAFT_PART_INSTALL}/bin:${PATH}
